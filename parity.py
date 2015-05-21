@@ -16,11 +16,13 @@ def process_ignore_patterns(text, ignore_patterns):
 		s = sub(pattern, '', s)
 	return s
 
-def fetch_url(url, headers=None):
+def fetch_url(url, headers=None, data=None):
+	if data:
+		headers['Content-Length'] = len(data)
 	attempt = 0
 	while attempt < 5:
 		try:
-			request = Request(url, headers=headers)
+			request = Request(url, headers=headers, data=data)
 			response = urlopen(request, timeout=300).read().decode('utf-8')
 			return response
 			attempt += 1
@@ -65,6 +67,7 @@ if __name__ == '__main__':
 	settings_file.close()
 	control_url_format = settings.get('Settings', 'ControlUrlFormat')
 	treatment_url_format = settings.get('Settings', 'TreatmentUrlFormat')
+	post_data_format = settings.get('Settings', 'PostDataFormat') if settings.has_option('Settings', 'PostDataFormat') else None
 	query_filename = settings.get('Settings', 'QueryFilename')
 	headers = {k:v for (k,v) in settings.items('Headers')} if settings.has_section('Headers') else {}
 	ignore_patterns = [v.strip() for (k,v) in settings.items('Ignore')] if settings.has_section('Ignore') else []
@@ -83,9 +86,10 @@ if __name__ == '__main__':
 		fields = [quote(x) for x in line.split('\t')]
 		control_url = control_url_format.format(*fields)
 		treatment_url = treatment_url_format.format(*fields)
-		control_response = fetch_url(control_url, headers)
+		post_data = post_data_format.format(*fields) if post_data_format else None
+		control_response = fetch_url(control_url, headers, post_data)
 		control_response = process_ignore_patterns(control_response, ignore_patterns)
-		treatment_response = fetch_url(treatment_url, headers)
+		treatment_response = fetch_url(treatment_url, headers, post_data)
 		treatment_response = process_ignore_patterns(treatment_response, ignore_patterns)
 		if not control_response or control_response != treatment_response:
 			compare_responses(control_url, control_response, treatment_url, treatment_response, fields)
