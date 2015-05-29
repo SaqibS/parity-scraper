@@ -60,7 +60,7 @@ if __name__ == '__main__':
 	if len(argv) > 1:
 		settings_filename = argv[1]
 	else:
-		settings_filename = path.join(path.dirname(path.realpath(__file__)), 'SimpleParity.ini')
+		settings_filename = path.join(path.dirname(path.realpath(__file__)), 'parity.ini')
 	settings_file = open(settings_filename, mode='r', encoding='utf-8')
 	settings = ConfigParser()
 	settings.readfp(settings_file)
